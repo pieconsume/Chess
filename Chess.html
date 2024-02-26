@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <title></title>
+  <style>
+   * { position: absolute; margin: 0px; border-width: 0px; padding: 0px; outline: none;  -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+   div { border-style: solid; border-width: 2px; }
+   body > div { border-color: #606060; }
+   .tile { position: static; border-color: #000000; width: 60px; height: 60px; text-align: center; font-size: 50px; }
+   </style>
+  </head>
+ <body style="background: #000000">
+  <div id="menu"    style="left: 10px;  top: 10px;  width: 128px; height: 512px; background: #808080;">
+   <div id="promotions" style="border: none; width: 128px; height: 128px; display: grid; grid-template-columns: repeat(2, 64px); grid-template-rows: repeat(2, 64px);">
+    <div id="prmqueen"  class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♕');">♕</div>
+    <div id="prmrook"   class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♖');">♖</div>
+    <div id="prmbishop" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♗');">♗</div>
+    <div id="prmknight" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♘');">♘</div>
+    </div>
+   <div id="resign"     style=""></div>
+   </div>
+  <div id="board"   style="left: 148px; top: 10px;  width: 512px; height: 512px; display: grid; grid-template-columns: repeat(8, 64px); grid-template-rows: repeat(8, 64px);"></div>
+  <div id="letters" style="left: 148px; top: 532px; width: 512px; height: 64px;  display: grid; grid-template-columns: repeat(8, 64px); grid-template-rows: repeat(1, 64px); background: #404040">
+   <div class="tile">A</div>
+   <div class="tile">B</div>
+   <div class="tile">C</div>
+   <div class="tile">D</div>
+   <div class="tile">E</div>
+   <div class="tile">F</div>
+   <div class="tile">G</div>
+   <div class="tile">H</div>
+   </div>
+  <div id="numbers" style="left: 670px; top: 10px; width: 64px; height: 512px;   display: grid; grid-template-columns: repeat(1, 64px); grid-template-rows: repeat(8, 64px); flex-direction: left; background: #404040">
+   <div class="tile">8</div>
+   <div class="tile">7</div>
+   <div class="tile">6</div>
+   <div class="tile">5</div>
+   <div class="tile">4</div>
+   <div class="tile">3</div>
+   <div class="tile">2</div>
+   <div class="tile">1</div>
+   </div>
+  </body>
+ <script>
+  let tiledivs      = board.getElementsByTagName("div");
+  let promotiondivs = promotions.getElementsByTagName("div");
+  let selected = null;
+  let whiteturn, promoting, promotingtile;
+  let whitepieces = "♙♖♘♗♕♔";
+  let blackpieces = "♟︎♜♞♝♛♚";
+  let whitestart = "♖♘♗♕♔♗♘♖";
+  let blackstart = "♜♞♝♛♚♝♞♜";
+  let wcleft, wcright;
+  let bcleft, bcright;
+  let whiteop, blackop;
+  init();
+  addEventListener("mousedown", e => { clearselections(); });
+  function init(){
+   whiteturn = true, promoting = false;
+   wcleft = true, wcright = true;
+   bcleft = true, bcright = true;
+   whiteop = null; blackop = null;
+   for (let i = 0; i < tiledivs.length;) { tiledivs[0].remove(); }
+   for (let i = 0; i < 8; i++){
+    for (let j = 0; j < 8; j++){
+    let tilediv = document.createElement("div");
+    tilediv.className = "tile";
+    tilediv.tabIndex  = "-1";
+    tilediv.dataset.y = i;
+    tilediv.dataset.x = j;
+    tilediv.dataset.index = i*8+j;
+    tilediv.addEventListener("mousedown", e => { tileclick(i*8+j); e.stopPropagation(); });
+    if (i == 0) { tilediv.dataset.piece = blackstart[j]; tilediv.innerText = blackstart[j]; }
+    else if (i == 1) { tilediv.dataset.piece = "♟︎"; tilediv.innerText = "♟︎"; }
+    else if (i == 6) { tilediv.dataset.piece = "♙"; tilediv.innerText = "♙"; }
+    else if (i == 7) { tilediv.dataset.piece = whitestart[j]; tilediv.innerText = whitestart[j]; }
+    else { tilediv.dataset.piece = ""; }
+    tilediv.style.background = (j+i) % 2 != 0 ? "#202020" : "#E0E0E0";
+    board.append(tilediv); } } }
+  function tileclick(index){
+   if (selected != null && tiledivs[index].dataset.canmove == "1") { domove(selected, index); }
+   selected = index;
+   clearselections();
+   tiledivs[index].style.backgroundColor = "#000080";
+   selectpiece(index); }
+  function clearselections(){ 
+   for (let i = 0; i < 8; i++){
+   for (let j = 0; j < 8; j++){
+    tiledivs[i*8+j].style.background = (i+j) % 2 != 0 ? "#202020" : "#E0E0E0";
+    tiledivs[i*8+j].dataset.canmove = "0"; } } }
+  function selectpiece(index){
+   if (promoting) { return; }
+   let targets = getmoves(index, false);
+   incheck();
+   for (let idx in targets) { if (validpos(index, targets[idx])) { tiledivs[targets[idx]].style.background = "#400000"; tiledivs[targets[idx]].dataset.canmove = "1"; } }
+   }
+  function getmoves(index, checktest){
+   function tryaddmove(index){
+    if (index < 0 || index > 63) { return false; }
+    let piece = tiledivs[index].dataset.piece;
+    if (piece == "")                      { moves[moveidx] = index; moveidx++; return true; }
+    else if (enemypieces.includes(piece)) { moves[moveidx]=index; moveidx++; return false } 
+    else                                  { return false; } }
+   let tile  = tiledivs[index];
+   let x     = parseInt(tile.dataset.x);
+   let y     = parseInt(tile.dataset.y);
+   let piece = tile.dataset.piece;
+   let side = checktest ? !whiteturn : whiteturn;
+   let enemypieces = side ? blackpieces : whitepieces;
+   let moves = [];
+   let moveidx = 0;
+   if (piece == "" || ((blackpieces.includes(piece) ? side : !side) && !checktest)) { return; }
+   if      (piece == "♙"){
+    let infront  = tiledivs[index-8]  != null && tiledivs[index-8].dataset.piece != "";
+    let infront2 = tiledivs[index-16] != null && tiledivs[index-16].dataset.piece != "";
+    if (!checktest && !infront) { tryaddmove(index-8) }
+    if (!checktest && y == 6 && !infront && !infront2) { tryaddmove(index-16); }
+    if (x != 7 && y != 0) { if (tiledivs[index-7].dataset.piece != "" || index-7 == blackop || checktest) { tryaddmove(index-7); } }
+    if (x != 0 && y != 0) { if (tiledivs[index-9].dataset.piece != "" || index-9 == blackop || checktest) { tryaddmove(index-9); } } }
+   else if (piece == "♟︎"){
+    let infront  = tiledivs[index+8]  != null && tiledivs[index+8].dataset.piece != "";
+    let infront2 = tiledivs[index+16] != null && tiledivs[index+16].dataset.piece != "";
+    if (!checktest && !infront) { tryaddmove(index+8) }
+    if (!checktest && y == 1 && !infront && !infront2) { tryaddmove(index+16); }
+    if (x != 0 && y != 7) { if (tiledivs[index+7].dataset.piece != "" || index+7 == whiteop || checktest) { tryaddmove(index+7); } }
+    if (x != 7 && y != 7) { if (tiledivs[index+9].dataset.piece != "" || index+9 == whiteop || checktest) { tryaddmove(index+9); } } }
+   else if (piece == "♖" || piece == "♜"){
+    for (let i = 1; x-i >= 0; i++){ if (!tryaddmove(index- i))   { break; } }
+    for (let i = 1; x+i <  8; i++){ if (!tryaddmove(index+ i))   { break; } }
+    for (let i = 1; y-i >= 0; i++){ if (!tryaddmove(index- i*8)) { break; } }
+    for (let i = 1; y+i <  8; i++){ if (!tryaddmove(index+ i*8)) { break; } } }
+   else if (piece == "♘" || piece == "♞"){
+    if (x >= 2) { tryaddmove((y-1)*8+x-2) }
+    if (x >= 2) { tryaddmove((y+1)*8+x-2) }
+    if (x != 0) { tryaddmove((y-2)*8+x-1) }
+    if (x != 0) { tryaddmove((y+2)*8+x-1) }
+    if (x != 7) { tryaddmove((y-2)*8+x+1) }
+    if (x != 7) { tryaddmove((y+2)*8+x+1) }
+    if (x <= 5) { tryaddmove((y-1)*8+x+2) }
+    if (x <= 5) { tryaddmove((y+1)*8+x+2) } }
+   else if (piece == "♗" || piece == "♝"){
+    for (let i = 1; y-i >= 0 && x-i >= 0; i++) { if (!tryaddmove((index)-(i*8+i))) { break; } }
+    for (let i = 1; y-i >= 0 && x+i <  8; i++) { if (!tryaddmove((index)-(i*8)+i)) { break; } }
+    for (let i = 1; y+i <  8 && x-i >= 0; i++) { if (!tryaddmove((index)+i*8-i)) { break; } }
+    for (let i = 1; y+i <  8 && x+i <  8; i++) { if (!tryaddmove((index)+i*8+i)) { break; } } }
+   else if (piece == "♕" || piece == "♛"){
+    for (let i = 1; x-i >= 0; i++){ if (!tryaddmove(index- i))   { break; } }
+    for (let i = 1; x+i <  8; i++){ if (!tryaddmove(index+ i))   { break; } }
+    for (let i = 1; y-i >= 0; i++){ if (!tryaddmove(index- i*8)) { break; } }
+    for (let i = 1; y+i <  8; i++){ if (!tryaddmove(index+ i*8)) { break; } }
+    for (let i = 1; y-i >= 0 && x-i >= 0; i++) { if (!tryaddmove((index)-(i*8+i))) { break; } }
+    for (let i = 1; y-i >= 0 && x+i <  8; i++) { if (!tryaddmove((index)-(i*8)+i)) { break; } }
+    for (let i = 1; y+i <  8 && x-i >= 0; i++) { if (!tryaddmove((index)+i*8-i)) { break; } }
+    for (let i = 1; y+i <  8 && x+i <  8; i++) { if (!tryaddmove((index)+i*8+i)) { break; } } }
+   else if (piece == "♔" || piece == "♚"){
+    if (x != 0) { tryaddmove(index-9); }
+    tryaddmove(index-8);
+    if (x != 7) { tryaddmove(index-7); }
+    if (x != 0) { tryaddmove(index-1); }
+    if (x != 7) { tryaddmove(index+1); }
+    if (x != 0) { tryaddmove(index+7); }
+    tryaddmove(index+8);
+    if (x != 7) { tryaddmove(index+9); }
+    if (!checktest && ((whiteturn && wcleft)  || (!whiteturn && bcleft))){
+     let left1 = tiledivs[index-1].dataset.piece;
+     let left3 = tiledivs[index-3].dataset.piece;
+     if (left1 == "" && left3 == "" && !incheck() && validpos(index, index-1)) { tryaddmove(index-2); } }
+    if (!checktest && ((whiteturn && wcright) || (!whiteturn && bcright))){
+     let right1 = tiledivs[index+1].dataset.piece;
+     if (right1 == "" && !incheck() && validpos(index, index+1)) { tryaddmove(index+2); } }
+    }
+   return moves;}
+  function validpos(oldpos, newpos){
+   let restoreold = tiledivs[oldpos].dataset.piece;
+   let restorenew = tiledivs[newpos].dataset.piece;
+   tiledivs[newpos].dataset.piece = tiledivs[oldpos].dataset.piece;
+   tiledivs[oldpos].dataset.piece = "";
+   let enemypieces = whiteturn ? blackpieces : whitepieces;
+   let king = whiteturn ? "♔" : "♚";
+   for (let i = 0; i < 64; i++){ 
+    let tile = tiledivs[i];
+    let piece = tile.dataset.piece;
+    if (piece != "" && enemypieces.includes(piece)){
+     let targets = getmoves(i, true);
+     for (let idx in targets) { if (tiledivs[targets[idx]].dataset.piece == king) { tiledivs[newpos].dataset.piece = restorenew; tiledivs[oldpos].dataset.piece = restoreold; return false; } }
+     }
+    }
+   tiledivs[newpos].dataset.piece = restorenew;
+   tiledivs[oldpos].dataset.piece = restoreold;
+   return true;
+   }
+  function domove(oldpos, newpos){
+   selected = null;
+   let oldtile = tiledivs[oldpos];
+   let newtile = tiledivs[newpos];
+   let oldpiece = oldtile.dataset.piece;
+   let newpiece = newtile.dataset.piece;
+   if (oldpiece == "♔") { wcleft = false; wcright = false; }
+   if (oldpiece == "♚") { bcleft = false; bcright = false; }
+   if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+2) { tiledivs[7*8+0].dataset.piece = ""; tiledivs[7*8+0].innerText = ""; tiledivs[7*8+3].dataset.piece = "♖"; tiledivs[7*8+3].innerText = "♖"; }
+   if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+6) { tiledivs[7*8+7].dataset.piece = ""; tiledivs[7*8+7].innerText = ""; tiledivs[7*8+5].dataset.piece = "♖"; tiledivs[7*8+5].innerText = "♖"; }
+   if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 2)     { tiledivs[0].dataset.piece = ""; tiledivs[0].innerText = ""; tiledivs[3].dataset.piece = "♜"; tiledivs[3].innerText = "♜"; }
+   if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 6)     { tiledivs[7].dataset.piece = ""; tiledivs[7].innerText = ""; tiledivs[5].dataset.piece = "♜"; tiledivs[5].innerText = "♜"; }
+   if (oldtile.dataset.index == 0     || newtile.dataset.index == 0)     { bcleft = false; }
+   if (oldtile.dataset.index == 7     || newtile.dataset.index == 7)     { bcright = false; }
+   if (oldtile.dataset.index == 7*8   || newtile.dataset.index == 7*8)   { wcleft = false; }
+   if (oldtile.dataset.index == 7*8+7 || newtile.dataset.index == 7*8+7) { wcright = false; }
+   if (oldpiece == "♙" && newpos == blackop) { tiledivs[newpos+8].innerText = ""; tiledivs[newpos+8].dataset.piece = ""; }
+   if (oldpiece == "♟︎" && newpos == whiteop) { tiledivs[newpos-8].innerText = ""; tiledivs[newpos-8].dataset.piece = ""; }
+   if (whiteturn) { blackop = null; } else { whiteop = null; }
+   if (oldpiece == "♙" && oldtile.dataset.y == 6 && newtile.dataset.y == 4) { whiteop = 5*8+parseInt(oldtile.dataset.x); }
+   if (oldpiece == "♟︎" && oldtile.dataset.y == 1 && newtile.dataset.y == 3) { blackop = 2*8+parseInt(oldtile.dataset.x); }
+   if (oldpiece == "♙" && newtile.dataset.y == 0) { promoting = true; promotingtile = newtile.dataset.index; for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#C0C0C0"; promotiondivs[i].style.borderColor = "#A0A0A0"; } }
+   if (oldpiece == "♟︎" && newtile.dataset.y == 7) { promoting = true; promotingtile = newtile.dataset.index; for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#000000"; promotiondivs[i].style.borderColor = "#202020"; } }
+   whiteturn = !whiteturn;
+   newtile.dataset.piece = oldtile.dataset.piece;
+   newtile.innerText     = oldtile.dataset.piece;
+   oldtile.dataset.piece = "";
+   oldtile.innerText = "";
+   clearselections();
+   let gameover = isgameover();
+   if (gameover) { console.log(gameover); if (gameover == "stalemate") { console.log("stalemate"); } else if (whiteturn) { console.log("black wins"); } else { console.log("white wins"); } } }
+  function isgameover(){
+   let pieces = whiteturn ? whitepieces : blackpieces;
+   for (let i = 0; i < 64; i++){
+    let tile = tiledivs[i];
+    let piece = tile.dataset.piece;
+    if (piece != "" && pieces.includes(piece)) {
+    let targets = getmoves(i, false);
+    for (let idx in targets) { if (validpos(i, targets[idx])) { return false; } } } }
+   if (incheck()) { return "checkmate"; } else { return "stalemate"; }
+   return true;
+   }
+  function incheck(){
+   let pieces = whiteturn ? blackpieces : whitepieces;
+   let king = whiteturn ? "♔" : "♚";
+   for (let i = 0; i < 64; i++){
+    let tile = tiledivs[i];
+    let piece = tile.dataset.piece;
+    if (piece != "" && pieces.includes(piece)) {
+    let targets = getmoves(i, true);
+    for (let idx in targets) { if (tiledivs[targets[idx]].dataset.piece == king) { return true; } } } }
+   return false;
+   }
+  function promote(type){
+   if (!promoting) { return; }
+   if (whiteturn && type == "♕") { type = "♛"; }
+   if (whiteturn && type == "♖") { type = "♜"; }
+   if (whiteturn && type == "♗") { type = "♝"; }
+   if (whiteturn && type == "♘") { type = "♞"; }
+   let tile = tiledivs[promotingtile];
+   tile.dataset.piece = type;
+   tile.innerText = type;
+   promoting = false; promotingtile = null;
+   for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#707070"; promotiondivs[i].style.borderColor = "#505050"; }
+  }
+  function gameover() {}
+  </script>
+ </html>
