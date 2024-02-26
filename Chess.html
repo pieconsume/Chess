@@ -197,10 +197,10 @@
    let newpiece = newtile.dataset.piece;
    if (oldpiece == "♔") { wcleft = false; wcright = false; }
    if (oldpiece == "♚") { bcleft = false; bcright = false; }
-   if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+2) { settile(7*8+0, ""); settile(7*8+3, ♖); }
-   if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+6) { settile(7*8+7, ""); settile(7*8+5, ♖); }
-   if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 2)     { settile(0, ""); settile(3, ♜); }
-   if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 6)     { settile(7, ""); settile(5, ♜); }
+   if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+2) { settile(7*8+0, ""); settile(7*8+3, "♖"); }
+   if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+6) { settile(7*8+7, ""); settile(7*8+5, "♖"); }
+   if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 2)     { settile(0, ""); settile(3, "♜"); }
+   if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 6)     { settile(7, ""); settile(5, "♜"); }
    if (oldtile.dataset.index == 0     || newtile.dataset.index == 0)     { bcleft = false; }
    if (oldtile.dataset.index == 7     || newtile.dataset.index == 7)     { bcright = false; }
    if (oldtile.dataset.index == 7*8   || newtile.dataset.index == 7*8)   { wcleft = false; }
