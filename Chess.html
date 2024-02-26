@@ -17,7 +17,9 @@
     <div id="prmbishop" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♗');">♗</div>
     <div id="prmknight" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♘');">♘</div>
     </div>
-   <div id="resign"     style=""></div>
+   <div id="reset"      style="top: 132px; left: 0px;  width: 60px;  height: 20px; background: #303030; border-color: #202020; text-align: center;" onclick="init();">Reset</div>
+   <div id="resign"     style="top: 132px; left: 64px; width: 60px;  height: 20px; background: #303030; border-color: #202020; text-align: center;" onclick="">Resign</div>
+   <div id="turn"       style="top: 476px; left: 0px;  width: 124px; height: 32px; background: #A0A0A0; border-color: #C0C0C0; text-align: center;"></div>
    </div>
   <div id="board"   style="left: 148px; top: 10px;  width: 512px; height: 512px; display: grid; grid-template-columns: repeat(8, 64px); grid-template-rows: repeat(8, 64px);"></div>
   <div id="letters" style="left: 148px; top: 532px; width: 512px; height: 64px;  display: grid; grid-template-columns: repeat(8, 64px); grid-template-rows: repeat(1, 64px); background: #404040">
@@ -45,7 +47,7 @@
   let tiledivs      = board.getElementsByTagName("div");
   let promotiondivs = promotions.getElementsByTagName("div");
   let selected = null;
-  let whiteturn, promoting, promotingtile;
+  let whiteturn, promoting, promotingtile, gameover;
   let whitepieces = "♙♖♘♗♕♔";
   let blackpieces = "♟︎♜♞♝♛♚";
   let whitestart = "♖♘♗♕♔♗♘♖";
@@ -56,7 +58,7 @@
   init();
   addEventListener("mousedown", e => { clearselections(); });
   function init(){
-   whiteturn = true, promoting = false;
+   whiteturn = true, promoting = false, gameover = false;
    wcleft = true, wcright = true;
    bcleft = true, bcright = true;
    whiteop = null; blackop = null;
@@ -89,7 +91,7 @@
     tiledivs[i*8+j].style.background = (i+j) % 2 != 0 ? "#202020" : "#E0E0E0";
     tiledivs[i*8+j].dataset.canmove = "0"; } } }
   function selectpiece(index){
-   if (promoting) { return; }
+   if (promoting || gameover) { return; }
    let targets = getmoves(index, false);
    incheck();
    for (let idx in targets) { if (validpos(index, targets[idx])) { tiledivs[targets[idx]].style.background = "#400000"; tiledivs[targets[idx]].dataset.canmove = "1"; } }
@@ -214,7 +216,8 @@
    settile(oldpos, "");
    clearselections();
    let gameover = isgameover();
-   if (gameover) { console.log(gameover); if (gameover == "stalemate") { console.log("stalemate"); } else if (whiteturn) { console.log("black wins"); } else { console.log("white wins"); } } }
+   if (!gameover) { if (whiteturn) { turn.style.background = "#A0A0A0"; turn.style.borderColor = "#C0C0C0"; } else { turn.style.background = "#202020"; turn.style.borderColor = "#000000"; } }
+   if (gameover) { if (gameover == "stalemate") { turn.style.background = "#707070"; turn.style.borderColor = "#505050"; turn.innerText = "Stalemate"; } else { turn.innerText = "Checkmate"; } } }
   function isgameover(){
    let pieces = whiteturn ? whitepieces : blackpieces;
    for (let i = 0; i < 64; i++){
@@ -249,6 +252,5 @@
    promoting = false; promotingtile = null;
    for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#707070"; promotiondivs[i].style.borderColor = "#505050"; } }
   function settile(index, value) { tiledivs[index].dataset.piece = value; tiledivs[index].innerText = value; }
-  function gameover() {}
   </script>
  </html>
