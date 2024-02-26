@@ -70,7 +70,7 @@
     tilediv.dataset.x = j;
     tilediv.dataset.index = i*8+j;
     tilediv.addEventListener("mousedown", e => { tileclick(i*8+j); e.stopPropagation(); });
-    if (i == 0) { tilediv.dataset.piece = blackstart[j]; tilediv.innerText = blackstart[j]; }
+    if (i == 0)      { tilediv.dataset.piece = blackstart[j]; tilediv.innerText = blackstart[j]; }
     else if (i == 1) { tilediv.dataset.piece = "♟︎"; tilediv.innerText = "♟︎"; }
     else if (i == 6) { tilediv.dataset.piece = "♙"; tilediv.innerText = "♙"; }
     else if (i == 7) { tilediv.dataset.piece = whitestart[j]; tilediv.innerText = whitestart[j]; }
@@ -167,8 +167,7 @@
      if (left1 == "" && left3 == "" && !incheck() && validpos(index, index-1)) { tryaddmove(index-2); } }
     if (!checktest && ((whiteturn && wcright) || (!whiteturn && bcright))){
      let right1 = tiledivs[index+1].dataset.piece;
-     if (right1 == "" && !incheck() && validpos(index, index+1)) { tryaddmove(index+2); } }
-    }
+     if (right1 == "" && !incheck() && validpos(index, index+1)) { tryaddmove(index+2); } } }
    return moves;}
   function validpos(oldpos, newpos){
    let restoreold = tiledivs[oldpos].dataset.piece;
@@ -181,10 +180,8 @@
     let tile = tiledivs[i];
     let piece = tile.dataset.piece;
     if (piece != "" && enemypieces.includes(piece)){
-     let targets = getmoves(i, true);
-     for (let idx in targets) { if (tiledivs[targets[idx]].dataset.piece == king) { tiledivs[newpos].dataset.piece = restorenew; tiledivs[oldpos].dataset.piece = restoreold; return false; } }
-     }
-    }
+    let targets = getmoves(i, true);
+    for (let idx in targets) { if (tiledivs[targets[idx]].dataset.piece == king) { tiledivs[newpos].dataset.piece = restorenew; tiledivs[oldpos].dataset.piece = restoreold; return false; } } } }
    tiledivs[newpos].dataset.piece = restorenew;
    tiledivs[oldpos].dataset.piece = restoreold;
    return true;
@@ -250,8 +247,7 @@
    tile.dataset.piece = type;
    tile.innerText = type;
    promoting = false; promotingtile = null;
-   for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#707070"; promotiondivs[i].style.borderColor = "#505050"; }
-  }
+   for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#707070"; promotiondivs[i].style.borderColor = "#505050"; } }
   function settile(index, value) { tiledivs[index].dataset.piece = value; tiledivs[index].innerText = value; }
   function gameover() {}
   </script>
