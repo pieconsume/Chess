@@ -3,10 +3,11 @@
  <head>
   <title></title>
   <style>
-   * { position: absolute; margin: 0px; border-width: 0px; padding: 0px; outline: none;  -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-   div { border-style: solid; border-width: 2px; }
+   * { position: absolute; margin: 0px; border: none; padding: 0px; outline: none;  -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+   div { border-style: solid; border-width: 2px; text-align: center; }
    body > div { border-color: #606060; }
    .tile { position: static; border-color: #000000; width: 60px; height: 60px; text-align: center; font-size: 50px; }
+   .textbox { text-align: left; font-size: 14px; overflow: hidden; }
    </style>
   </head>
  <body style="background: #000000">
@@ -17,9 +18,15 @@
     <div id="prmbishop" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♗');">♗</div>
     <div id="prmknight" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♘');">♘</div>
     </div>
-   <div id="reset"      style="top: 132px; left: 0px;  width: 60px;  height: 20px; background: #303030; border-color: #202020; text-align: center;" onclick="init();">Reset</div>
-   <div id="resign"     style="top: 132px; left: 64px; width: 60px;  height: 20px; background: #303030; border-color: #202020; text-align: center;" onclick="">Resign</div>
-   <div id="turn"       style="top: 476px; left: 0px;  width: 124px; height: 32px; background: #A0A0A0; border-color: #C0C0C0; text-align: center;"></div>
+   <div id="reset"      style="top: 130px; left: 0px;  width: 60px;  height: 20px; background: #303030; border-color: #202020;" onclick="init();">Reset</div>
+   <div id="resign"     style="top: 130px; left: 64px; width: 60px;  height: 20px; background: #303030; border-color: #202020;" onclick="">Resign</div>
+   <div id="connect"    style="top: 156px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030;" onclick="connect();">Connect to server</div>
+   <div id="server"     style="top: 180px; left: 0px;  width: 124px; height: 40px; background: #C0C0C0; border-color: #606060;" class="textbox" contenteditable="true" oninput="trimtext(server);">ws://0.0.0.0:0000/</div>
+   <div id="pickwhite"  style="top: 226px; left: 0px;  width: 60px;  height: 20px; background: #A0A0A0; border-color: #707070;">White</div>
+   <div id="pickblack"  style="top: 226px; left: 64px; width: 60px;  height: 20px; background: #404040; border-color: #303030;">Black</div>
+   <div id="pickrandom" style="top: 250px; left: 0px;  width: 124px; height: 20px; background: #707070; border-color: #606060;">Random</div>
+   <div id="flip"       style="top: 450px; left: 0px;  width: 124px; height: 20px; background: #C0C0C0; border-color: #A0A0A0;" onclick="flipboard();">Flip Board</div>
+   <div id="turn"       style="top: 476px; left: 0px;  width: 124px; height: 32px; background: #A0A0A0; border-color: #C0C0C0; line-height: 30px;">White turn</div>
    </div>
   <div id="board"   style="left: 148px; top: 10px;  width: 512px; height: 512px; display: grid; grid-template-columns: repeat(8, 64px); grid-template-rows: repeat(8, 64px);"></div>
   <div id="letters" style="left: 148px; top: 532px; width: 512px; height: 64px;  display: grid; grid-template-columns: repeat(8, 64px); grid-template-rows: repeat(1, 64px); background: #404040">
@@ -55,6 +62,7 @@
   let wcleft, wcright;
   let bcleft, bcright;
   let whiteop, blackop;
+  let gamestarted = false, connected = false, sidepicked = false;
   init();
   addEventListener("mousedown", e => { clearselections(); });
   function init(){
@@ -68,6 +76,7 @@
     let tilediv = document.createElement("div");
     tilediv.className = "tile";
     tilediv.tabIndex  = "-1";
+    tilediv.style.order = i;
     tilediv.dataset.y = i;
     tilediv.dataset.x = j;
     tilediv.dataset.index = i*8+j;
@@ -90,6 +99,11 @@
    for (let j = 0; j < 8; j++){
     tiledivs[i*8+j].style.background = (i+j) % 2 != 0 ? "#202020" : "#E0E0E0";
     tiledivs[i*8+j].dataset.canmove = "0"; } } }
+  function flipboard(){
+   let flipped = tiledivs[0].style.order != 0;
+   if (flipped) { flip.style.background = "#C0C0C0"; flip.style.borderColor = "#A0A0A0"; } else { flip.style.background = "#404040"; flip.style.borderColor = "#202020"; }
+   for (let i = 0; i < 64; i++){
+   if (flipped) { tiledivs[i].style.order = i; } else { tiledivs[i].style.order = 64-i; } } }
   function selectpiece(index){
    if (promoting || gameover) { return; }
    let targets = getmoves(index, false);
@@ -216,8 +230,10 @@
    settile(oldpos, "");
    clearselections();
    let gameover = isgameover();
-   if (!gameover) { if (whiteturn) { turn.style.background = "#A0A0A0"; turn.style.borderColor = "#C0C0C0"; } else { turn.style.background = "#202020"; turn.style.borderColor = "#000000"; } }
-   if (gameover) { if (gameover == "stalemate") { turn.style.background = "#707070"; turn.style.borderColor = "#505050"; turn.innerText = "Stalemate"; } else { turn.innerText = "Checkmate"; } } }
+   if (!gameover) { 
+    if (whiteturn) { turn.style.background = "#A0A0A0"; turn.style.borderColor = "#C0C0C0"; turn.innerText = "White Turn"; }
+    else           { turn.style.background = "#202020"; turn.style.borderColor = "#000000"; turn.innerText = "Black Turn"; } }
+   else { if (gameover == "stalemate") { turn.style.background = "#707070"; turn.style.borderColor = "#505050"; turn.innerText = "Stalemate"; } else { turn.innerText = "Checkmate"; } } }
   function isgameover(){
    let pieces = whiteturn ? whitepieces : blackpieces;
    for (let i = 0; i < 64; i++){
@@ -252,5 +268,21 @@
    promoting = false; promotingtile = null;
    for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#707070"; promotiondivs[i].style.borderColor = "#505050"; } }
   function settile(index, value) { tiledivs[index].dataset.piece = value; tiledivs[index].innerText = value; }
+  function connect(){
+   if (connected) { return; }
+   const websocket = new WebSocket(server.innerText);
+   connected = true;
+   }
+  function trimtext(input){
+   let invalidchars = "\n"
+   Array.from(input.innerText).forEach(c => {if (invalidchars.includes(c)) { input.innerText = input.innerText.replaceAll(c, ""); resetcursor(input); } });
+   if (input.innerText.length > 80){ input.innerText = input.innerText.substring(0, 80); resetcursor(input); } }
+  function resetcursor(input){
+   if (input.innerText.length == 0) { return; }
+   let range = document.createRange();
+   let sel = window.getSelection();
+   range.setStart(input.childNodes[0], input.innerText.length);
+   sel.removeAllRanges();
+   sel.addRange(range);}
   </script>
  </html>
