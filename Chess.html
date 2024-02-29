@@ -20,10 +20,10 @@
     </div>
    <div id="reset"      style="top: 130px; left: 0px;  width: 60px;  height: 20px; background: #303030; border-color: #202020;" onclick="init();">Reset</div>
    <div id="resign"     style="top: 130px; left: 64px; width: 60px;  height: 20px; background: #303030; border-color: #202020;" onclick="">Resign</div>
-   <div id="connect"    style="top: 156px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030;" onclick="connect();">Connect to server</div>
-   <div id="server"     style="top: 180px; left: 0px;  width: 124px; height: 40px; background: #C0C0C0; border-color: #606060;" class="textbox" contenteditable="true" oninput="trimtext(server);">ws://0.0.0.0:0000/</div>
-   <div id="pickwhite"  style="top: 226px; left: 0px;  width: 60px;  height: 20px; background: #A0A0A0; border-color: #707070;">White</div>
-   <div id="pickblack"  style="top: 226px; left: 64px; width: 60px;  height: 20px; background: #404040; border-color: #303030;">Black</div>
+   <div id="connect"    style="top: 156px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030;" onclick="joingame();">Connect to server</div>
+   <div id="server"     style="top: 180px; left: 0px;  width: 124px; height: 40px; background: #C0C0C0; border-color: #606060;" class="textbox" contenteditable="true" oninput="trimtext(server);">ws://127.0.0.1:6075/</div>
+   <div id="pickwhite"  style="top: 226px; left: 0px;  width: 60px;  height: 20px; background: #707070; border-color: #606060;">White</div>
+   <div id="pickblack"  style="top: 226px; left: 64px; width: 60px;  height: 20px; background: #707070; border-color: #606060;">Black</div>
    <div id="pickrandom" style="top: 250px; left: 0px;  width: 124px; height: 20px; background: #707070; border-color: #606060;">Random</div>
    <div id="flip"       style="top: 450px; left: 0px;  width: 124px; height: 20px; background: #C0C0C0; border-color: #A0A0A0;" onclick="flipboard();">Flip Board</div>
    <div id="turn"       style="top: 476px; left: 0px;  width: 124px; height: 32px; background: #A0A0A0; border-color: #C0C0C0; line-height: 30px;">White turn</div>
@@ -51,20 +51,20 @@
    </div>
   </body>
  <script>
-  let tiledivs      = board.getElementsByTagName("div");
-  let promotiondivs = promotions.getElementsByTagName("div");
-  let letterdivs    = letters.getElementsByTagName("div");
-  let numberdivs    = numbers.getElementsByTagName("div");
+  const tiledivs      = board.getElementsByTagName("div");
+  const promotiondivs = promotions.getElementsByTagName("div");
+  const letterdivs    = letters.getElementsByTagName("div");
+  const numberdivs    = numbers.getElementsByTagName("div");
+  const whitepieces = "♙♖♘♗♕♔";
+  const blackpieces = "♟︎♜♞♝♛♚";
+  const whitestart = "♖♘♗♕♔♗♘♖";
+  const blackstart = "♜♞♝♛♚♝♞♜";
   let selected = null;
   let whiteturn, promoting, promotingtile, gameover;
-  let whitepieces = "♙♖♘♗♕♔";
-  let blackpieces = "♟︎♜♞♝♛♚";
-  let whitestart = "♖♘♗♕♔♗♘♖";
-  let blackstart = "♜♞♝♛♚♝♞♜";
   let wcleft, wcright;
   let bcleft, bcright;
   let whiteop, blackop;
-  let gamestarted = false, connected = false, sidepicked = false;
+  let ws, connected = false, white;
   init();
   addEventListener("mousedown", e => { clearselections(); });
   function init(){
@@ -182,7 +182,7 @@
    tiledivs[oldpos].dataset.piece = restoreold;
    return true;
    }
-  function domove(oldpos, newpos){
+  function domove(oldpos, newpos, send){
    selected = null;
    let oldtile = tiledivs[oldpos];
    let newtile = tiledivs[newpos];
@@ -209,6 +209,7 @@
    settile(newpos, oldpiece);
    settile(oldpos, "");
    clearselections();
+   if (connected && send) { ws.send(oldpos + " " + newpos); }
    let gameover = isgameover();
    if (!gameover) { 
     if (whiteturn) { turn.style.background = "#A0A0A0"; turn.style.borderColor = "#C0C0C0"; turn.innerText = "White Turn"; }
@@ -249,7 +250,7 @@
    for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#707070"; promotiondivs[i].style.borderColor = "#505050"; } }
   function settile(index, value) { tiledivs[index].dataset.piece = value; tiledivs[index].innerText = value; }
   function tileclick(index){
-   if (selected != null && tiledivs[index].dataset.canmove == "1") { domove(selected, index); }
+   if (selected != null && tiledivs[index].dataset.canmove == "1") { domove(selected, index, true); }
    selected = index;
    clearselections();
    tiledivs[index].style.backgroundColor = "#000080";
@@ -280,9 +281,11 @@
    range.setStart(input.childNodes[0], input.innerText.length);
    sel.removeAllRanges();
    sel.addRange(range);}
-  function connect(){
+  function joingame(){
    if (connected) { return; }
-   const websocket = new WebSocket(server.innerText);
-   connected = true; }
+   ws = new WebSocket(server.innerText);
+   ws.onopen    = ()    => { connected = true;  connect.style.background = "#208020"; connect.innerText = "Connected"; }
+   ws.onclose   = ()    => { connected = false; connect.style.background = "#404040"; connect.innerText = "Lost connection"; ws = null; } 
+   ws.onmessage = (msg) => { msg.data.text().then((final) => { console.log(); domove(final.split(" ")[0], final.split(" ")[1], false); }); } }
   </script>
  </html>
