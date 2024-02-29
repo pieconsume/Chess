@@ -53,6 +53,8 @@
  <script>
   let tiledivs      = board.getElementsByTagName("div");
   let promotiondivs = promotions.getElementsByTagName("div");
+  let letterdivs    = letters.getElementsByTagName("div");
+  let numberdivs    = numbers.getElementsByTagName("div");
   let selected = null;
   let whiteturn, promoting, promotingtile, gameover;
   let whitepieces = "♙♖♘♗♕♔";
@@ -88,28 +90,6 @@
     else { tilediv.dataset.piece = ""; }
     tilediv.style.background = (j+i) % 2 != 0 ? "#202020" : "#E0E0E0";
     board.append(tilediv); } } }
-  function tileclick(index){
-   if (selected != null && tiledivs[index].dataset.canmove == "1") { domove(selected, index); }
-   selected = index;
-   clearselections();
-   tiledivs[index].style.backgroundColor = "#000080";
-   selectpiece(index); }
-  function clearselections(){ 
-   for (let i = 0; i < 8; i++){
-   for (let j = 0; j < 8; j++){
-    tiledivs[i*8+j].style.background = (i+j) % 2 != 0 ? "#202020" : "#E0E0E0";
-    tiledivs[i*8+j].dataset.canmove = "0"; } } }
-  function flipboard(){
-   let flipped = tiledivs[0].style.order != 0;
-   if (flipped) { flip.style.background = "#C0C0C0"; flip.style.borderColor = "#A0A0A0"; } else { flip.style.background = "#404040"; flip.style.borderColor = "#202020"; }
-   for (let i = 0; i < 64; i++){
-   if (flipped) { tiledivs[i].style.order = i; } else { tiledivs[i].style.order = 64-i; } } }
-  function selectpiece(index){
-   if (promoting || gameover) { return; }
-   let targets = getmoves(index, false);
-   incheck();
-   for (let idx in targets) { if (validpos(index, targets[idx])) { tiledivs[targets[idx]].style.background = "#400000"; tiledivs[targets[idx]].dataset.canmove = "1"; } }
-   }
   function getmoves(index, checktest){
    function tryaddmove(index){
     if (index < 0 || index > 63) { return false; }
@@ -268,11 +248,27 @@
    promoting = false; promotingtile = null;
    for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#707070"; promotiondivs[i].style.borderColor = "#505050"; } }
   function settile(index, value) { tiledivs[index].dataset.piece = value; tiledivs[index].innerText = value; }
-  function connect(){
-   if (connected) { return; }
-   const websocket = new WebSocket(server.innerText);
-   connected = true;
-   }
+  function tileclick(index){
+   if (selected != null && tiledivs[index].dataset.canmove == "1") { domove(selected, index); }
+   selected = index;
+   clearselections();
+   tiledivs[index].style.backgroundColor = "#000080";
+   selectpiece(index); }
+  function selectpiece(index){
+   if (promoting || gameover) { return; }
+   let targets = getmoves(index, false);
+   incheck();
+   for (let idx in targets) { if (validpos(index, targets[idx])) { tiledivs[targets[idx]].style.background = "#400000"; tiledivs[targets[idx]].dataset.canmove = "1"; } } }
+  function clearselections(){ 
+   for (let i = 0; i < 8; i++){
+   for (let j = 0; j < 8; j++){
+    tiledivs[i*8+j].style.background = (i+j) % 2 != 0 ? "#202020" : "#E0E0E0";
+    tiledivs[i*8+j].dataset.canmove = "0"; } } }
+  function flipboard(){
+   let flipped = tiledivs[0].style.order != 0;
+   if (flipped) { flip.style.background = "#C0C0C0"; flip.style.borderColor = "#A0A0A0"; } else { flip.style.background = "#404040"; flip.style.borderColor = "#202020"; }
+   for (let i = 0; i < 64; i++) { if (flipped) { tiledivs[i].style.order = i; } else { tiledivs[i].style.order = 64-i; } } 
+   for (let i = 0; i < 64; i++) { if (flipped) { letterdivs[i].style.order = i; numberdivs[i].style.order = i; } else { letterdivs[i].style.order = 8-i; numberdivs[i].style.order = 8-i; } } }
   function trimtext(input){
    let invalidchars = "\n"
    Array.from(input.innerText).forEach(c => {if (invalidchars.includes(c)) { input.innerText = input.innerText.replaceAll(c, ""); resetcursor(input); } });
@@ -284,5 +280,9 @@
    range.setStart(input.childNodes[0], input.innerText.length);
    sel.removeAllRanges();
    sel.addRange(range);}
+  function connect(){
+   if (connected) { return; }
+   const websocket = new WebSocket(server.innerText);
+   connected = true; }
   </script>
  </html>
