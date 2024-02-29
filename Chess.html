@@ -18,13 +18,17 @@
     <div id="prmbishop" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♗');">♗</div>
     <div id="prmknight" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♘');">♘</div>
     </div>
-   <div id="reset"      style="top: 130px; left: 0px;  width: 60px;  height: 20px; background: #303030; border-color: #202020;" onclick="init();">Reset</div>
-   <div id="resign"     style="top: 130px; left: 64px; width: 60px;  height: 20px; background: #303030; border-color: #202020;" onclick="">Resign</div>
-   <div id="connect"    style="top: 156px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030;" onclick="joingame();">Connect to server</div>
-   <div id="server"     style="top: 180px; left: 0px;  width: 124px; height: 40px; background: #C0C0C0; border-color: #606060;" class="textbox" contenteditable="true" oninput="trimtext(server);">ws://127.0.0.1:6075/</div>
-   <div id="pickwhite"  style="top: 226px; left: 0px;  width: 60px;  height: 20px; background: #707070; border-color: #606060;">White</div>
-   <div id="pickblack"  style="top: 226px; left: 64px; width: 60px;  height: 20px; background: #707070; border-color: #606060;">Black</div>
-   <div id="pickrandom" style="top: 250px; left: 0px;  width: 124px; height: 20px; background: #707070; border-color: #606060;">Random</div>
+   <div id="connect"    style="top: 130px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030;" onclick="joingame();">Connect to server</div>
+   <div id="server"     style="top: 154px; left: 0px;  width: 124px; height: 40px; background: #C0C0C0; border-color: #606060;" class="textbox" contenteditable="true" oninput="trimtext(server);">ws://127.0.0.1:6075/</div>
+   <div id="opponent"   style="top: 198px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030;">No opponent</div>
+   <div id="pickwhite"  style="top: 224px; left: 0px;  width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;">White</div>
+   <div id="pickblack"  style="top: 224px; left: 64px; width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;">Black</div>
+   <div id="pickrandom" style="top: 248px; left: 0px;  width: 124px; height: 20px; background: #808080; border-color: #707070; color: #707070;">Random</div>
+   <div id="draw"       style="top: 274px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #505050;" onclick="offerdraw();">Offer Draw</div>
+   <div id="resign"     style="top: 298px; left: 0px;  width: 60px;  height: 20px; background: #505050; border-color: #303030;" onclick="resign();">Resign</div>
+   <div id="reset"      style="top: 298px; left: 64px; width: 60px;  height: 20px; background: #505050; border-color: #303030;" onclick="init();">Reset</div>
+   <div id="yes"        style="top: 322px; left: 0px;  width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="resign();">Yes</div>
+   <div id="no"         style="top: 322px; left: 64px; width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="init();">No</div>
    <div id="flip"       style="top: 450px; left: 0px;  width: 124px; height: 20px; background: #C0C0C0; border-color: #A0A0A0;" onclick="flipboard();">Flip Board</div>
    <div id="turn"       style="top: 476px; left: 0px;  width: 124px; height: 32px; background: #A0A0A0; border-color: #C0C0C0; line-height: 30px;">White turn</div>
    </div>
@@ -39,7 +43,7 @@
    <div class="tile">G</div>
    <div class="tile">H</div>
    </div>
-  <div id="numbers" style="left: 670px; top: 10px; width: 64px; height: 512px;   display: grid; grid-template-columns: repeat(1, 64px); grid-template-rows: repeat(8, 64px); flex-direction: left; background: #404040">
+  <div id="numbers" style="left: 670px; top: 10px;  width: 64px;  height: 512px; display: grid; grid-template-columns: repeat(1, 64px); grid-template-rows: repeat(8, 64px); flex-direction: left; background: #404040">
    <div class="tile">8</div>
    <div class="tile">7</div>
    <div class="tile">6</div>
@@ -49,6 +53,7 @@
    <div class="tile">2</div>
    <div class="tile">1</div>
    </div>
+  <div id="moves"   style="left: 746px; top: 10px;  width: 128px; height: 512px; background: #909090; border-color: #707070; overflow-y: scroll;"></div>
   </body>
  <script>
   const tiledivs      = board.getElementsByTagName("div");
@@ -72,6 +77,7 @@
    wcleft = true, wcright = true;
    bcleft = true, bcright = true;
    whiteop = null; blackop = null;
+   turn.style.background = "#A0A0A0"; turn.style.borderColor = "#C0C0C0"; turn.innerText = "White Turn";
    for (let i = 0; i < tiledivs.length;) { tiledivs[0].remove(); }
    for (let i = 0; i < 8; i++){
     for (let j = 0; j < 8; j++){
