@@ -18,17 +18,17 @@
     <div id="prmbishop" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♗');">♗</div>
     <div id="prmknight" class="tile" style="color: #707070; border-color: #505050;" onclick="promote('♘');">♘</div>
     </div>
-   <div id="connect"    style="top: 130px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030;" onclick="joingame();">Connect to server</div>
+   <div id="connect"    style="top: 130px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030; font-size: 12px;" onclick="joingame();">Connect to server</div>
    <div id="server"     style="top: 154px; left: 0px;  width: 124px; height: 40px; background: #C0C0C0; border-color: #606060;" class="textbox" contenteditable="true" oninput="trimtext(server);">ws://127.0.0.1:6075/</div>
-   <div id="opponent"   style="top: 198px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030;">No opponent</div>
-   <div id="pickwhite"  style="top: 224px; left: 0px;  width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;">White</div>
-   <div id="pickblack"  style="top: 224px; left: 64px; width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;">Black</div>
-   <div id="pickrandom" style="top: 248px; left: 0px;  width: 124px; height: 20px; background: #808080; border-color: #707070; color: #707070;">Random</div>
-   <div id="draw"       style="top: 274px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #505050;" onclick="offerdraw();">Offer Draw</div>
-   <div id="resign"     style="top: 298px; left: 0px;  width: 60px;  height: 20px; background: #505050; border-color: #303030;" onclick="resign();">Resign</div>
-   <div id="reset"      style="top: 298px; left: 64px; width: 60px;  height: 20px; background: #505050; border-color: #303030;" onclick="init();">Reset</div>
-   <div id="yes"        style="top: 322px; left: 0px;  width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="resign();">Yes</div>
-   <div id="no"         style="top: 322px; left: 64px; width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="init();">No</div>
+   <div id="opponent"   style="top: 198px; left: 0px;  width: 124px; height: 20px; background: #606060; border-color: #303030; font-size: 12px;">No opponent</div>
+   <div id="pickwhite"  style="top: 224px; left: 0px;  width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="select('white')">White</div>
+   <div id="pickblack"  style="top: 224px; left: 64px; width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="select('black')">Black</div>
+   <div id="pickrandom" style="top: 248px; left: 0px;  width: 124px; height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="select('random')">Random</div>
+   <div id="draw"       style="top: 274px; left: 0px;  width: 124px; height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="offerdraw();">Offer Draw</div>
+   <div id="resign"     style="top: 298px; left: 0px;  width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="resign();">Resign</div>
+   <div id="reset"      style="top: 298px; left: 64px; width: 60px;  height: 20px; background: #505050; border-color: #303030;" onclick="resetgame();">Reset</div>
+   <div id="yes"        style="top: 322px; left: 0px;  width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="yesno();">Yes</div>
+   <div id="no"         style="top: 322px; left: 64px; width: 60px;  height: 20px; background: #808080; border-color: #707070; color: #707070;" onclick="nono();">No</div>
    <div id="flip"       style="top: 450px; left: 0px;  width: 124px; height: 20px; background: #C0C0C0; border-color: #A0A0A0;" onclick="flipboard();">Flip Board</div>
    <div id="turn"       style="top: 476px; left: 0px;  width: 124px; height: 32px; background: #A0A0A0; border-color: #C0C0C0; line-height: 30px;">White turn</div>
    </div>
@@ -53,245 +53,268 @@
    <div class="tile">2</div>
    <div class="tile">1</div>
    </div>
-  <div id="moves"   style="left: 746px; top: 10px;  width: 128px; height: 512px; background: #909090; border-color: #707070; overflow-y: scroll;"></div>
+  <div id="moves"   style="left: 746px; top: 10px;  width: 128px; height: 512px; background: #909090; border-color: #707070; overflow-y: scroll; scrollbar-color: #404040 #606060;"></div>
   </body>
  <script>
-  const tiledivs      = board.getElementsByTagName("div");
-  const promotiondivs = promotions.getElementsByTagName("div");
-  const letterdivs    = letters.getElementsByTagName("div");
-  const numberdivs    = numbers.getElementsByTagName("div");
-  const whitepieces = "♙♖♘♗♕♔";
-  const blackpieces = "♟︎♜♞♝♛♚";
-  const whitestart = "♖♘♗♕♔♗♘♖";
-  const blackstart = "♜♞♝♛♚♝♞♜";
-  let selected = null;
-  let whiteturn, promoting, promotingtile, gameover;
-  let wcleft, wcright;
-  let bcleft, bcright;
-  let whiteop, blackop;
-  let ws, connected = false, white;
-  init();
-  addEventListener("mousedown", e => { clearselections(); });
-  function init(){
-   whiteturn = true, promoting = false, gameover = false;
-   wcleft = true, wcright = true;
-   bcleft = true, bcright = true;
-   whiteop = null; blackop = null;
-   turn.style.background = "#A0A0A0"; turn.style.borderColor = "#C0C0C0"; turn.innerText = "White Turn";
-   for (let i = 0; i < tiledivs.length;) { tiledivs[0].remove(); }
-   for (let i = 0; i < 8; i++){
+  //Init
+   const tiledivs      = board.getElementsByTagName("div");
+   const promotiondivs = promotions.getElementsByTagName("div");
+   const letterdivs    = letters.getElementsByTagName("div");
+   const numberdivs    = numbers.getElementsByTagName("div");
+   const whitepieces = "♙♖♘♗♕♔";
+   const blackpieces = "♟︎♜♞♝♛♚";
+   const whitestart = "♖♘♗♕♔♗♘♖";
+   const blackstart = "♜♞♝♛♚♝♞♜";
+   let selected = null;
+   let whiteturn, promoting, promotingtile, gameover;
+   let wcleft, wcright;
+   let bcleft, bcright;
+   let whiteop, blackop;
+   let ws, gamestarted = false, connected = false, picking = false, white;
+   init();
+   addEventListener("mousedown", e => { clearselections(); });
+   function init(){
+    whiteturn = true, promoting = false, gameover = false;
+    wcleft = true, wcright = true;
+    bcleft = true, bcright = true;
+    whiteop = null; blackop = null;
+    turn.style.background = "#A0A0A0"; turn.style.borderColor = "#C0C0C0"; turn.innerText = "White Turn";
+    for (let i = 0; i < tiledivs.length;) { tiledivs[0].remove(); }
+    for (let i = 0; i < 8; i++){
+     for (let j = 0; j < 8; j++){
+     let tilediv = document.createElement("div");
+     tilediv.className = "tile";
+     tilediv.tabIndex  = "-1";
+     tilediv.style.order = i;
+     tilediv.dataset.y = i;
+     tilediv.dataset.x = j;
+     tilediv.dataset.index = i*8+j;
+     tilediv.addEventListener("mousedown", e => { tileclick(i*8+j); e.stopPropagation(); });
+     if (i == 0)      { tilediv.dataset.piece = blackstart[j]; tilediv.innerText = blackstart[j]; }
+     else if (i == 1) { tilediv.dataset.piece = "♟︎"; tilediv.innerText = "♟︎"; }
+     else if (i == 6) { tilediv.dataset.piece = "♙"; tilediv.innerText = "♙"; }
+     else if (i == 7) { tilediv.dataset.piece = whitestart[j]; tilediv.innerText = whitestart[j]; }
+     else { tilediv.dataset.piece = ""; }
+     tilediv.style.background = (j+i) % 2 != 0 ? "#202020" : "#E0E0E0";
+     board.append(tilediv); } } }
+  //Game funcs
+   function getmoves(index, checktest){
+    function tryaddmove(index){
+     if (index < 0 || index > 63) { return false; }
+     let piece = tiledivs[index].dataset.piece;
+     if (piece == "")                      { moves[moveidx] = index; moveidx++; return true; }
+     else if (enemypieces.includes(piece)) { moves[moveidx]=index; moveidx++; return false } 
+     else                                  { return false; } }
+    let tile  = tiledivs[index];
+    let x     = parseInt(tile.dataset.x);
+    let y     = parseInt(tile.dataset.y);
+    let piece = tile.dataset.piece;
+    let side = checktest ? !whiteturn : whiteturn;
+    let enemypieces = side ? blackpieces : whitepieces;
+    let moves = [];
+    let moveidx = 0;
+    if (piece == "" || ((blackpieces.includes(piece) ? side : !side) && !checktest)) { return; }
+    if      (piece == "♙"){
+     let infront  = tiledivs[index-8]  != null && tiledivs[index-8].dataset.piece != "";
+     let infront2 = tiledivs[index-16] != null && tiledivs[index-16].dataset.piece != "";
+     if (!checktest && !infront) { tryaddmove(index-8) }
+     if (!checktest && y == 6 && !infront && !infront2) { tryaddmove(index-16); }
+     if (x != 7 && y != 0) { if (tiledivs[index-7].dataset.piece != "" || index-7 == blackop || checktest) { tryaddmove(index-7); } }
+     if (x != 0 && y != 0) { if (tiledivs[index-9].dataset.piece != "" || index-9 == blackop || checktest) { tryaddmove(index-9); } } }
+    else if (piece == "♟︎"){
+     let infront  = tiledivs[index+8]  != null && tiledivs[index+8].dataset.piece != "";
+     let infront2 = tiledivs[index+16] != null && tiledivs[index+16].dataset.piece != "";
+     if (!checktest && !infront) { tryaddmove(index+8) }
+     if (!checktest && y == 1 && !infront && !infront2) { tryaddmove(index+16); }
+     if (x != 0 && y != 7) { if (tiledivs[index+7].dataset.piece != "" || index+7 == whiteop || checktest) { tryaddmove(index+7); } }
+     if (x != 7 && y != 7) { if (tiledivs[index+9].dataset.piece != "" || index+9 == whiteop || checktest) { tryaddmove(index+9); } } }
+    else if (piece == "♖" || piece == "♜"){
+     for (let i = 1; x-i >= 0; i++){ if (!tryaddmove(index- i))   { break; } }
+     for (let i = 1; x+i <  8; i++){ if (!tryaddmove(index+ i))   { break; } }
+     for (let i = 1; y-i >= 0; i++){ if (!tryaddmove(index- i*8)) { break; } }
+     for (let i = 1; y+i <  8; i++){ if (!tryaddmove(index+ i*8)) { break; } } }
+    else if (piece == "♘" || piece == "♞"){
+     if (x >= 2) { tryaddmove((y-1)*8+x-2) }
+     if (x >= 2) { tryaddmove((y+1)*8+x-2) }
+     if (x != 0) { tryaddmove((y-2)*8+x-1) }
+     if (x != 0) { tryaddmove((y+2)*8+x-1) }
+     if (x != 7) { tryaddmove((y-2)*8+x+1) }
+     if (x != 7) { tryaddmove((y+2)*8+x+1) }
+     if (x <= 5) { tryaddmove((y-1)*8+x+2) }
+     if (x <= 5) { tryaddmove((y+1)*8+x+2) } }
+    else if (piece == "♗" || piece == "♝"){
+     for (let i = 1; y-i >= 0 && x-i >= 0; i++) { if (!tryaddmove((index)-(i*8+i))) { break; } }
+     for (let i = 1; y-i >= 0 && x+i <  8; i++) { if (!tryaddmove((index)-(i*8)+i)) { break; } }
+     for (let i = 1; y+i <  8 && x-i >= 0; i++) { if (!tryaddmove((index)+i*8-i)) { break; } }
+     for (let i = 1; y+i <  8 && x+i <  8; i++) { if (!tryaddmove((index)+i*8+i)) { break; } } }
+    else if (piece == "♕" || piece == "♛"){
+     for (let i = 1; x-i >= 0; i++){ if (!tryaddmove(index- i))   { break; } }
+     for (let i = 1; x+i <  8; i++){ if (!tryaddmove(index+ i))   { break; } }
+     for (let i = 1; y-i >= 0; i++){ if (!tryaddmove(index- i*8)) { break; } }
+     for (let i = 1; y+i <  8; i++){ if (!tryaddmove(index+ i*8)) { break; } }
+     for (let i = 1; y-i >= 0 && x-i >= 0; i++) { if (!tryaddmove((index)-(i*8+i))) { break; } }
+     for (let i = 1; y-i >= 0 && x+i <  8; i++) { if (!tryaddmove((index)-(i*8)+i)) { break; } }
+     for (let i = 1; y+i <  8 && x-i >= 0; i++) { if (!tryaddmove((index)+i*8-i)) { break; } }
+     for (let i = 1; y+i <  8 && x+i <  8; i++) { if (!tryaddmove((index)+i*8+i)) { break; } } }
+    else if (piece == "♔" || piece == "♚"){
+     if (x != 0) { tryaddmove(index-9); }
+     tryaddmove(index-8);
+     if (x != 7) { tryaddmove(index-7); }
+     if (x != 0) { tryaddmove(index-1); }
+     if (x != 7) { tryaddmove(index+1); }
+     if (x != 0) { tryaddmove(index+7); }
+     tryaddmove(index+8);
+     if (x != 7) { tryaddmove(index+9); }
+     if (!checktest && ((whiteturn && wcleft)  || (!whiteturn && bcleft))){
+      let left1 = tiledivs[index-1].dataset.piece;
+      let left3 = tiledivs[index-3].dataset.piece;
+      if (left1 == "" && left3 == "" && !incheck() && validpos(index, index-1)) { tryaddmove(index-2); } }
+     if (!checktest && ((whiteturn && wcright) || (!whiteturn && bcright))){
+      let right1 = tiledivs[index+1].dataset.piece;
+      if (right1 == "" && !incheck() && validpos(index, index+1)) { tryaddmove(index+2); } } }
+    return moves;}
+   function validpos(oldpos, newpos){
+    let restoreold = tiledivs[oldpos].dataset.piece;
+    let restorenew = tiledivs[newpos].dataset.piece;
+    tiledivs[newpos].dataset.piece = tiledivs[oldpos].dataset.piece;
+    tiledivs[oldpos].dataset.piece = "";
+    let enemypieces = whiteturn ? blackpieces : whitepieces;
+    let king = whiteturn ? "♔" : "♚";
+    for (let i = 0; i < 64; i++){ 
+     let tile = tiledivs[i];
+     let piece = tile.dataset.piece;
+     if (piece != "" && enemypieces.includes(piece)){
+     let targets = getmoves(i, true);
+     for (let idx in targets) { if (tiledivs[targets[idx]].dataset.piece == king) { tiledivs[newpos].dataset.piece = restorenew; tiledivs[oldpos].dataset.piece = restoreold; return false; } } } }
+    tiledivs[newpos].dataset.piece = restorenew;
+    tiledivs[oldpos].dataset.piece = restoreold;
+    return true;
+    }
+   function domove(oldpos, newpos, send){
+    selected = null;
+    let oldtile = tiledivs[oldpos];
+    let newtile = tiledivs[newpos];
+    let oldpiece = oldtile.dataset.piece;
+    let newpiece = newtile.dataset.piece;
+    if (oldpiece == "♔") { wcleft = false; wcright = false; }
+    if (oldpiece == "♚") { bcleft = false; bcright = false; }
+    if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+2) { settile(7*8+0, ""); settile(7*8+3, "♖"); }
+    if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+6) { settile(7*8+7, ""); settile(7*8+5, "♖"); }
+    if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 2)     { settile(0, ""); settile(3, "♜"); }
+    if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 6)     { settile(7, ""); settile(5, "♜"); }
+    if (oldtile.dataset.index == 0     || newtile.dataset.index == 0)     { bcleft = false; }
+    if (oldtile.dataset.index == 7     || newtile.dataset.index == 7)     { bcright = false; }
+    if (oldtile.dataset.index == 7*8   || newtile.dataset.index == 7*8)   { wcleft = false; }
+    if (oldtile.dataset.index == 7*8+7 || newtile.dataset.index == 7*8+7) { wcright = false; }
+    if (oldpiece == "♙" && newpos == blackop) { settile(newpos+8, ""); }
+    if (oldpiece == "♟︎" && newpos == whiteop) { settile(newpos-8, ""); }
+    if (whiteturn) { blackop = null; } else { whiteop = null; }
+    if (oldpiece == "♙" && oldtile.dataset.y == 6 && newtile.dataset.y == 4) { whiteop = 5*8+parseInt(oldtile.dataset.x); }
+    if (oldpiece == "♟︎" && oldtile.dataset.y == 1 && newtile.dataset.y == 3) { blackop = 2*8+parseInt(oldtile.dataset.x); }
+    if (oldpiece == "♙" && newtile.dataset.y == 0) { promoting = true; promotingtile = newpos; for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#C0C0C0"; promotiondivs[i].style.borderColor = "#A0A0A0"; } }
+    if (oldpiece == "♟︎" && newtile.dataset.y == 7) { promoting = true; promotingtile = newpos; for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#000000"; promotiondivs[i].style.borderColor = "#202020"; } }
+    whiteturn = !whiteturn;
+    settile(newpos, oldpiece);
+    settile(oldpos, "");
+    clearselections();
+    if (connected && send) { ws.send(oldpos + " " + newpos); }
+    let gameover = isgameover();
+    if (!gameover) { 
+     if (whiteturn) { turn.style.background = "#A0A0A0"; turn.style.borderColor = "#C0C0C0"; turn.innerText = "White Turn"; }
+     else           { turn.style.background = "#202020"; turn.style.borderColor = "#000000"; turn.innerText = "Black Turn"; } }
+    else { if (gameover == "stalemate") { turn.style.background = "#707070"; turn.style.borderColor = "#505050"; turn.innerText = "Stalemate"; } else { turn.innerText = "Checkmate"; } } }
+   function isgameover(){
+    let pieces = whiteturn ? whitepieces : blackpieces;
+    for (let i = 0; i < 64; i++){
+     let tile = tiledivs[i];
+     let piece = tile.dataset.piece;
+     if (piece != "" && pieces.includes(piece)) {
+     let targets = getmoves(i, false);
+     for (let idx in targets) { if (validpos(i, targets[idx])) { return false; } } } }
+    if (incheck()) { return "checkmate"; } else { return "stalemate"; }
+    return true;
+    }
+   function incheck(){
+    let pieces = whiteturn ? blackpieces : whitepieces;
+    let king = whiteturn ? "♔" : "♚";
+    for (let i = 0; i < 64; i++){
+     let tile = tiledivs[i];
+     let piece = tile.dataset.piece;
+     if (piece != "" && pieces.includes(piece)) {
+     let targets = getmoves(i, true);
+     for (let idx in targets) { if (tiledivs[targets[idx]].dataset.piece == king) { return true; } } } }
+    return false;
+    }
+   function promote(type){
+    if (!promoting) { return; }
+    if (whiteturn && type == "♕") { type = "♛"; }
+    if (whiteturn && type == "♖") { type = "♜"; }
+    if (whiteturn && type == "♗") { type = "♝"; }
+    if (whiteturn && type == "♘") { type = "♞"; }
+    let tile = tiledivs[promotingtile];
+    tile.dataset.piece = type;
+    tile.innerText = type;
+    promoting = false; promotingtile = null;
+    for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#707070"; promotiondivs[i].style.borderColor = "#505050"; } }
+   function settile(index, value) { tiledivs[index].dataset.piece = value; tiledivs[index].innerText = value; }
+  //Display funcs
+   function tileclick(index){
+    if (selected != null && tiledivs[index].dataset.canmove == "1") { domove(selected, index, true); }
+    selected = index;
+    clearselections();
+    tiledivs[index].style.backgroundColor = "#000080";
+    selectpiece(index); }
+   function selectpiece(index){
+    if (promoting || gameover) { return; }
+    let targets = getmoves(index, false);
+    incheck();
+    for (let idx in targets) { if (validpos(index, targets[idx])) { tiledivs[targets[idx]].style.background = "#400000"; tiledivs[targets[idx]].dataset.canmove = "1"; } } }
+   function clearselections(){ 
+    for (let i = 0; i < 8; i++){
     for (let j = 0; j < 8; j++){
-    let tilediv = document.createElement("div");
-    tilediv.className = "tile";
-    tilediv.tabIndex  = "-1";
-    tilediv.style.order = i;
-    tilediv.dataset.y = i;
-    tilediv.dataset.x = j;
-    tilediv.dataset.index = i*8+j;
-    tilediv.addEventListener("mousedown", e => { tileclick(i*8+j); e.stopPropagation(); });
-    if (i == 0)      { tilediv.dataset.piece = blackstart[j]; tilediv.innerText = blackstart[j]; }
-    else if (i == 1) { tilediv.dataset.piece = "♟︎"; tilediv.innerText = "♟︎"; }
-    else if (i == 6) { tilediv.dataset.piece = "♙"; tilediv.innerText = "♙"; }
-    else if (i == 7) { tilediv.dataset.piece = whitestart[j]; tilediv.innerText = whitestart[j]; }
-    else { tilediv.dataset.piece = ""; }
-    tilediv.style.background = (j+i) % 2 != 0 ? "#202020" : "#E0E0E0";
-    board.append(tilediv); } } }
-  function getmoves(index, checktest){
-   function tryaddmove(index){
-    if (index < 0 || index > 63) { return false; }
-    let piece = tiledivs[index].dataset.piece;
-    if (piece == "")                      { moves[moveidx] = index; moveidx++; return true; }
-    else if (enemypieces.includes(piece)) { moves[moveidx]=index; moveidx++; return false } 
-    else                                  { return false; } }
-   let tile  = tiledivs[index];
-   let x     = parseInt(tile.dataset.x);
-   let y     = parseInt(tile.dataset.y);
-   let piece = tile.dataset.piece;
-   let side = checktest ? !whiteturn : whiteturn;
-   let enemypieces = side ? blackpieces : whitepieces;
-   let moves = [];
-   let moveidx = 0;
-   if (piece == "" || ((blackpieces.includes(piece) ? side : !side) && !checktest)) { return; }
-   if      (piece == "♙"){
-    let infront  = tiledivs[index-8]  != null && tiledivs[index-8].dataset.piece != "";
-    let infront2 = tiledivs[index-16] != null && tiledivs[index-16].dataset.piece != "";
-    if (!checktest && !infront) { tryaddmove(index-8) }
-    if (!checktest && y == 6 && !infront && !infront2) { tryaddmove(index-16); }
-    if (x != 7 && y != 0) { if (tiledivs[index-7].dataset.piece != "" || index-7 == blackop || checktest) { tryaddmove(index-7); } }
-    if (x != 0 && y != 0) { if (tiledivs[index-9].dataset.piece != "" || index-9 == blackop || checktest) { tryaddmove(index-9); } } }
-   else if (piece == "♟︎"){
-    let infront  = tiledivs[index+8]  != null && tiledivs[index+8].dataset.piece != "";
-    let infront2 = tiledivs[index+16] != null && tiledivs[index+16].dataset.piece != "";
-    if (!checktest && !infront) { tryaddmove(index+8) }
-    if (!checktest && y == 1 && !infront && !infront2) { tryaddmove(index+16); }
-    if (x != 0 && y != 7) { if (tiledivs[index+7].dataset.piece != "" || index+7 == whiteop || checktest) { tryaddmove(index+7); } }
-    if (x != 7 && y != 7) { if (tiledivs[index+9].dataset.piece != "" || index+9 == whiteop || checktest) { tryaddmove(index+9); } } }
-   else if (piece == "♖" || piece == "♜"){
-    for (let i = 1; x-i >= 0; i++){ if (!tryaddmove(index- i))   { break; } }
-    for (let i = 1; x+i <  8; i++){ if (!tryaddmove(index+ i))   { break; } }
-    for (let i = 1; y-i >= 0; i++){ if (!tryaddmove(index- i*8)) { break; } }
-    for (let i = 1; y+i <  8; i++){ if (!tryaddmove(index+ i*8)) { break; } } }
-   else if (piece == "♘" || piece == "♞"){
-    if (x >= 2) { tryaddmove((y-1)*8+x-2) }
-    if (x >= 2) { tryaddmove((y+1)*8+x-2) }
-    if (x != 0) { tryaddmove((y-2)*8+x-1) }
-    if (x != 0) { tryaddmove((y+2)*8+x-1) }
-    if (x != 7) { tryaddmove((y-2)*8+x+1) }
-    if (x != 7) { tryaddmove((y+2)*8+x+1) }
-    if (x <= 5) { tryaddmove((y-1)*8+x+2) }
-    if (x <= 5) { tryaddmove((y+1)*8+x+2) } }
-   else if (piece == "♗" || piece == "♝"){
-    for (let i = 1; y-i >= 0 && x-i >= 0; i++) { if (!tryaddmove((index)-(i*8+i))) { break; } }
-    for (let i = 1; y-i >= 0 && x+i <  8; i++) { if (!tryaddmove((index)-(i*8)+i)) { break; } }
-    for (let i = 1; y+i <  8 && x-i >= 0; i++) { if (!tryaddmove((index)+i*8-i)) { break; } }
-    for (let i = 1; y+i <  8 && x+i <  8; i++) { if (!tryaddmove((index)+i*8+i)) { break; } } }
-   else if (piece == "♕" || piece == "♛"){
-    for (let i = 1; x-i >= 0; i++){ if (!tryaddmove(index- i))   { break; } }
-    for (let i = 1; x+i <  8; i++){ if (!tryaddmove(index+ i))   { break; } }
-    for (let i = 1; y-i >= 0; i++){ if (!tryaddmove(index- i*8)) { break; } }
-    for (let i = 1; y+i <  8; i++){ if (!tryaddmove(index+ i*8)) { break; } }
-    for (let i = 1; y-i >= 0 && x-i >= 0; i++) { if (!tryaddmove((index)-(i*8+i))) { break; } }
-    for (let i = 1; y-i >= 0 && x+i <  8; i++) { if (!tryaddmove((index)-(i*8)+i)) { break; } }
-    for (let i = 1; y+i <  8 && x-i >= 0; i++) { if (!tryaddmove((index)+i*8-i)) { break; } }
-    for (let i = 1; y+i <  8 && x+i <  8; i++) { if (!tryaddmove((index)+i*8+i)) { break; } } }
-   else if (piece == "♔" || piece == "♚"){
-    if (x != 0) { tryaddmove(index-9); }
-    tryaddmove(index-8);
-    if (x != 7) { tryaddmove(index-7); }
-    if (x != 0) { tryaddmove(index-1); }
-    if (x != 7) { tryaddmove(index+1); }
-    if (x != 0) { tryaddmove(index+7); }
-    tryaddmove(index+8);
-    if (x != 7) { tryaddmove(index+9); }
-    if (!checktest && ((whiteturn && wcleft)  || (!whiteturn && bcleft))){
-     let left1 = tiledivs[index-1].dataset.piece;
-     let left3 = tiledivs[index-3].dataset.piece;
-     if (left1 == "" && left3 == "" && !incheck() && validpos(index, index-1)) { tryaddmove(index-2); } }
-    if (!checktest && ((whiteturn && wcright) || (!whiteturn && bcright))){
-     let right1 = tiledivs[index+1].dataset.piece;
-     if (right1 == "" && !incheck() && validpos(index, index+1)) { tryaddmove(index+2); } } }
-   return moves;}
-  function validpos(oldpos, newpos){
-   let restoreold = tiledivs[oldpos].dataset.piece;
-   let restorenew = tiledivs[newpos].dataset.piece;
-   tiledivs[newpos].dataset.piece = tiledivs[oldpos].dataset.piece;
-   tiledivs[oldpos].dataset.piece = "";
-   let enemypieces = whiteturn ? blackpieces : whitepieces;
-   let king = whiteturn ? "♔" : "♚";
-   for (let i = 0; i < 64; i++){ 
-    let tile = tiledivs[i];
-    let piece = tile.dataset.piece;
-    if (piece != "" && enemypieces.includes(piece)){
-    let targets = getmoves(i, true);
-    for (let idx in targets) { if (tiledivs[targets[idx]].dataset.piece == king) { tiledivs[newpos].dataset.piece = restorenew; tiledivs[oldpos].dataset.piece = restoreold; return false; } } } }
-   tiledivs[newpos].dataset.piece = restorenew;
-   tiledivs[oldpos].dataset.piece = restoreold;
-   return true;
-   }
-  function domove(oldpos, newpos, send){
-   selected = null;
-   let oldtile = tiledivs[oldpos];
-   let newtile = tiledivs[newpos];
-   let oldpiece = oldtile.dataset.piece;
-   let newpiece = newtile.dataset.piece;
-   if (oldpiece == "♔") { wcleft = false; wcright = false; }
-   if (oldpiece == "♚") { bcleft = false; bcright = false; }
-   if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+2) { settile(7*8+0, ""); settile(7*8+3, "♖"); }
-   if (oldpiece == "♔" && oldtile.dataset.index == 8*7+4 && newtile.dataset.index == 7*8+6) { settile(7*8+7, ""); settile(7*8+5, "♖"); }
-   if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 2)     { settile(0, ""); settile(3, "♜"); }
-   if (oldpiece == "♚" && oldtile.dataset.index == 4     && newtile.dataset.index == 6)     { settile(7, ""); settile(5, "♜"); }
-   if (oldtile.dataset.index == 0     || newtile.dataset.index == 0)     { bcleft = false; }
-   if (oldtile.dataset.index == 7     || newtile.dataset.index == 7)     { bcright = false; }
-   if (oldtile.dataset.index == 7*8   || newtile.dataset.index == 7*8)   { wcleft = false; }
-   if (oldtile.dataset.index == 7*8+7 || newtile.dataset.index == 7*8+7) { wcright = false; }
-   if (oldpiece == "♙" && newpos == blackop) { settile(newpos+8, ""); }
-   if (oldpiece == "♟︎" && newpos == whiteop) { settile(newpos-8, ""); }
-   if (whiteturn) { blackop = null; } else { whiteop = null; }
-   if (oldpiece == "♙" && oldtile.dataset.y == 6 && newtile.dataset.y == 4) { whiteop = 5*8+parseInt(oldtile.dataset.x); }
-   if (oldpiece == "♟︎" && oldtile.dataset.y == 1 && newtile.dataset.y == 3) { blackop = 2*8+parseInt(oldtile.dataset.x); }
-   if (oldpiece == "♙" && newtile.dataset.y == 0) { promoting = true; promotingtile = newpos; for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#C0C0C0"; promotiondivs[i].style.borderColor = "#A0A0A0"; } }
-   if (oldpiece == "♟︎" && newtile.dataset.y == 7) { promoting = true; promotingtile = newpos; for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#000000"; promotiondivs[i].style.borderColor = "#202020"; } }
-   whiteturn = !whiteturn;
-   settile(newpos, oldpiece);
-   settile(oldpos, "");
-   clearselections();
-   if (connected && send) { ws.send(oldpos + " " + newpos); }
-   let gameover = isgameover();
-   if (!gameover) { 
-    if (whiteturn) { turn.style.background = "#A0A0A0"; turn.style.borderColor = "#C0C0C0"; turn.innerText = "White Turn"; }
-    else           { turn.style.background = "#202020"; turn.style.borderColor = "#000000"; turn.innerText = "Black Turn"; } }
-   else { if (gameover == "stalemate") { turn.style.background = "#707070"; turn.style.borderColor = "#505050"; turn.innerText = "Stalemate"; } else { turn.innerText = "Checkmate"; } } }
-  function isgameover(){
-   let pieces = whiteturn ? whitepieces : blackpieces;
-   for (let i = 0; i < 64; i++){
-    let tile = tiledivs[i];
-    let piece = tile.dataset.piece;
-    if (piece != "" && pieces.includes(piece)) {
-    let targets = getmoves(i, false);
-    for (let idx in targets) { if (validpos(i, targets[idx])) { return false; } } } }
-   if (incheck()) { return "checkmate"; } else { return "stalemate"; }
-   return true;
-   }
-  function incheck(){
-   let pieces = whiteturn ? blackpieces : whitepieces;
-   let king = whiteturn ? "♔" : "♚";
-   for (let i = 0; i < 64; i++){
-    let tile = tiledivs[i];
-    let piece = tile.dataset.piece;
-    if (piece != "" && pieces.includes(piece)) {
-    let targets = getmoves(i, true);
-    for (let idx in targets) { if (tiledivs[targets[idx]].dataset.piece == king) { return true; } } } }
-   return false;
-   }
-  function promote(type){
-   if (!promoting) { return; }
-   if (whiteturn && type == "♕") { type = "♛"; }
-   if (whiteturn && type == "♖") { type = "♜"; }
-   if (whiteturn && type == "♗") { type = "♝"; }
-   if (whiteturn && type == "♘") { type = "♞"; }
-   let tile = tiledivs[promotingtile];
-   tile.dataset.piece = type;
-   tile.innerText = type;
-   promoting = false; promotingtile = null;
-   for (let i = 0; i < 4; i++) { promotiondivs[i].style.color = "#707070"; promotiondivs[i].style.borderColor = "#505050"; } }
-  function settile(index, value) { tiledivs[index].dataset.piece = value; tiledivs[index].innerText = value; }
-  function tileclick(index){
-   if (selected != null && tiledivs[index].dataset.canmove == "1") { domove(selected, index, true); }
-   selected = index;
-   clearselections();
-   tiledivs[index].style.backgroundColor = "#000080";
-   selectpiece(index); }
-  function selectpiece(index){
-   if (promoting || gameover) { return; }
-   let targets = getmoves(index, false);
-   incheck();
-   for (let idx in targets) { if (validpos(index, targets[idx])) { tiledivs[targets[idx]].style.background = "#400000"; tiledivs[targets[idx]].dataset.canmove = "1"; } } }
-  function clearselections(){ 
-   for (let i = 0; i < 8; i++){
-   for (let j = 0; j < 8; j++){
-    tiledivs[i*8+j].style.background = (i+j) % 2 != 0 ? "#202020" : "#E0E0E0";
-    tiledivs[i*8+j].dataset.canmove = "0"; } } }
-  function flipboard(){
-   let flipped = tiledivs[0].style.order != 0;
-   if (flipped) { flip.style.background = "#C0C0C0"; flip.style.borderColor = "#A0A0A0"; } else { flip.style.background = "#404040"; flip.style.borderColor = "#202020"; }
-   for (let i = 0; i < 64; i++) { if (flipped) { tiledivs[i].style.order = i; } else { tiledivs[i].style.order = 64-i; } } 
-   for (let i = 0; i < 64; i++) { if (flipped) { letterdivs[i].style.order = i; numberdivs[i].style.order = i; } else { letterdivs[i].style.order = 8-i; numberdivs[i].style.order = 8-i; } } }
-  function trimtext(input){
-   let invalidchars = "\n"
-   Array.from(input.innerText).forEach(c => {if (invalidchars.includes(c)) { input.innerText = input.innerText.replaceAll(c, ""); resetcursor(input); } });
-   if (input.innerText.length > 80){ input.innerText = input.innerText.substring(0, 80); resetcursor(input); } }
-  function resetcursor(input){
-   if (input.innerText.length == 0) { return; }
-   let range = document.createRange();
-   let sel = window.getSelection();
-   range.setStart(input.childNodes[0], input.innerText.length);
-   sel.removeAllRanges();
-   sel.addRange(range);}
-  function joingame(){
-   if (connected) { return; }
-   ws = new WebSocket(server.innerText);
-   ws.onopen    = ()    => { connected = true;  connect.style.background = "#208020"; connect.innerText = "Connected"; }
-   ws.onclose   = ()    => { connected = false; connect.style.background = "#404040"; connect.innerText = "Lost connection"; ws = null; } 
-   ws.onmessage = (msg) => { msg.data.text().then((final) => { console.log(); domove(final.split(" ")[0], final.split(" ")[1], false); }); } }
+     tiledivs[i*8+j].style.background = (i+j) % 2 != 0 ? "#202020" : "#E0E0E0";
+     tiledivs[i*8+j].dataset.canmove = "0"; } } }
+   function trimtext(input){
+    let invalidchars = "\n"
+    Array.from(input.innerText).forEach(c => {if (invalidchars.includes(c)) { input.innerText = input.innerText.replaceAll(c, ""); resetcursor(input); } });
+    if (input.innerText.length > 80){ input.innerText = input.innerText.substring(0, 80); resetcursor(input); } }
+   function resetcursor(input){
+    if (input.innerText.length == 0) { return; }
+    let range = document.createRange();
+    let sel = window.getSelection();
+    range.setStart(input.childNodes[0], input.innerText.length);
+    sel.removeAllRanges();
+    sel.addRange(range);}
+  //UI funcs
+   function joingame(){
+    if (connected) { return; }
+    ws = new WebSocket(server.innerText);
+    connected = true; connect.style.background = "#606060"; connect.innerText = "Connecting...";
+    ws.onopen    = ()    => { connect.style.background = "#208020"; connect.innerText = "Connected"; }
+    ws.onclose   = ()    => { connected = false; connect.style.background = "#404040"; connect.innerText = "Lost connection"; ws = null; }
+    ws.onmessage = (msg) => {
+     console.log(msg.data);
+     if      (msg.data == "-opconnected") { opponent.style.background = "#208020"; opponent.innerText = "Opponent connected"; }
+     else if (msg.data == "-oplostcon")   { opponent.style.background = "#404040"; opponent.innerText = "Opponent disconnected"; }
+     else if (msg.data == "-select")      {
+      picking = true;
+      pickwhite.style.background =  "#A0A0A0"; pickwhite.style.color = "#000000";
+      pickblack.style.background =  "#202020"; pickblack.style.color = "#000000";
+      pickrandom.style.background = "#606060"; pickrandom.style.color = "#000000";}
+     else if (msg.data == "-opselect") { opponent.innerText = "Opponent selecting"; }
+     else if (gamestarted) { domove(msg.data.split(" ")[0], final.split(" ")[1], false); } }; }
+   function select(){
+    }
+   function offerdraw(){
+    }
+   function resign(){
+    }
+   function resetgame(){}
+   function yesno() {  }
+   function flipboard(){
+    let flipped = tiledivs[0].style.order != 0;
+    if (flipped) { flip.style.background = "#C0C0C0"; flip.style.borderColor = "#A0A0A0"; } else { flip.style.background = "#404040"; flip.style.borderColor = "#202020"; }
+    for (let i = 0; i < 64; i++) { if (flipped) { tiledivs[i].style.order = i; } else { tiledivs[i].style.order = 64-i; } } 
+    for (let i = 0; i < 64; i++) { if (flipped) { letterdivs[i].style.order = i; numberdivs[i].style.order = i; } else { letterdivs[i].style.order = 8-i; numberdivs[i].style.order = 8-i; } } }
   </script>
  </html>
