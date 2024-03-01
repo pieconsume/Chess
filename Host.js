@@ -1,9 +1,12 @@
-function bothconnected() { client1.send("-opconnected"); client2.send("-opconnected"); client1.send("-select"); client2.send("-opselect"); }
+function bothconnected() { client1.send("-opconnected"); client2.send("-opconnected"); if(!gamestarted) { client1.send("-select"); client2.send("-opselect"); } }
 function processmsg(msg, host){
- if (msg.startsWith("-")){
-  }
- else if (host && client2 != null) { client2.send(msg); }
- else if (client1 != null)         { client1.send(msg); } }
+ console.log(msg.toString());
+ if (msg.toString().startsWith("-select") && host){
+  gamestarted = true;
+  let side = msg.split(" ")[1];
+  client1.send("-pick " + side == "white" ? "black" : "white"); }
+ else if (host && client2 != null) { client2.send(msg.toString()); }
+ else if (client1 != null)         { client1.send(msg.toString()); } }
 const { WebSocketServer } = require("ws");
 const server = new WebSocketServer({ port: 6075 });
 let client1, client2;
